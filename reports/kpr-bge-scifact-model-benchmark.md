@@ -2,6 +2,8 @@
 
 _Cập nhật: 19/11/2026. Báo cáo này tổng hợp lượt chạy đã lưu trong repo; không phải kết quả của một lượt chạy mới._
 
+> **Trạng thái nghiên cứu:** Notebook hiện chỉ chạy **mã đánh giá so sánh hai checkpoint retrieval có sẵn (KPR và BGE)** trên một mẫu SciFact. KPR xuất phát từ một paper **khác sáu paper nhóm trình bày**. Kết quả này chưa phải reproduction của paper KPR, cũng chưa phải baseline hoặc reproduction của bất kỳ paper nào trong sáu paper đó. Đặc biệt, chưa có benchmark Fact-Grounding Gap với SRO, TRA và uncertainty.
+
 ## 1. Model đang dùng
 
 | Vai trò | Checkpoint | Nguồn |
@@ -51,11 +53,37 @@ Nguồn: [notebook](../kpr-vs-bge-scifact-sampled-evaluation.ipynb), [README](..
 
 Trong mẫu này, KPR bằng BGE ở Recall@10 và thấp hơn ở các metric còn lại. Chưa có khoảng tin cậy hoặc kiểm định thống kê cho các chênh lệch.
 
-## 4. Mức độ tái tạo paper và hướng nghiên cứu nhóm
+## 4. Notebook đã làm gì và mức độ tái tạo paper
 
-**Chưa tái tạo kết quả paper KPR.** Repo dùng checkpoint đã công bố để so sánh inference trên mẫu SciFact riêng; chưa tái hiện đầy đủ dữ liệu, pool, huấn luyện hoặc bảng kết quả của paper. Qrels SciFact ở đây đo mức liên quan của passage với claim, không gắn nhãn passage ủng hộ hay phản bác claim.
+### 4.1. Phạm vi đã chạy thực tế
 
-**Chưa tái tạo Fact-Grounding Gap.** Notebook hiện không có decision model, SRO, TRA hoặc uncertainty, và chưa thay câu hỏi thường bằng SRO để benchmark fact grounding. Không thể suy ra hiệu quả của hướng SRO–TRA–uncertainty từ kết quả retrieval KPR–BGE này.
+1. Tải và kiểm tra mã nguồn/checkpoint KPR được công bố; tải checkpoint BGE để đối chứng.
+2. Lấy mẫu 40 truy vấn SciFact và lập cùng một pool 800 passage cho hai model.
+3. Mã hóa truy vấn và passage thành embedding, xếp hạng passage bằng similarity.
+4. Tính Recall@1/5/10, MRR@10, nDCG@10; lưu output trong notebook và xuất báo cáo JSON.
+
+Đây là **mã benchmark so sánh model do notebook thiết lập**, chạy inference trên checkpoint có sẵn. Notebook không chứng minh đã chạy lại mã huấn luyện hay protocol đánh giá đầy đủ của tác giả KPR. Vì vậy, dùng cụm “đã chạy so sánh KPR–BGE trên mẫu SciFact” là chính xác hơn “đã reproduce paper KPR”.
+
+### 4.2. Quan hệ với các paper nhóm trình bày
+
+Paper cung cấp KPR là [*Dynamic Injection of Entity Knowledge into Dense Retrievers*](https://aclanthology.org/2025.findings-emnlp.915/), **nằm ngoài** sáu paper nhóm đang trình bày. Trong repo này, không có mã hoặc kết quả benchmark tái tạo các phương pháp sau:
+
+| Paper trong phần trình bày | Bằng chứng triển khai trong notebook hiện tại | Trạng thái từ repo này |
+|---|---|---|
+| TRA-RAG | Không có module biểu diễn/khai thác TRA | Chưa reproduce |
+| HEAR-RAG | Không có pipeline HEAR-RAG | Chưa reproduce |
+| SG-RAG | Không có pipeline SG-RAG | Chưa reproduce |
+| FACTA | Không có pipeline FACTA | Chưa reproduce |
+| CIRAG | Không có pipeline CIRAG | Chưa reproduce |
+| Fact-Grounding Gap | Không có phép đo fact grounding theo protocol của paper | Chưa reproduce |
+
+Bảng này chỉ đánh giá **nội dung hiện có trong repo này**; không kết luận nhóm chưa chạy các paper đó ở repo, nhánh hoặc máy khác.
+
+### 4.3. Vì sao kết quả hiện tại chưa trả lời câu hỏi nghiên cứu của nhóm
+
+SciFact qrels trong notebook đo **passage có liên quan tới claim hay không**, không gắn nhãn passage ủng hộ/phản bác hoặc fact đã được grounding hay chưa. Đầu vào là truy vấn SciFact thông thường; notebook chưa chuyển truy vấn thành bộ **subject–relation–object (SRO)**, chưa xây biểu diễn **TRA**, chưa kết hợp hai biểu diễn bằng **decision model**, và chưa tính **uncertainty** để quyết định. Do đó các metric retrieval ở mục 3 không đo được hiệu quả của hướng SRO–TRA–uncertainty, cũng không phải kết quả benchmark Fact-Grounding Gap sau khi thay câu hỏi bằng SRO.
+
+Để gọi một bước là reproduction Fact-Grounding Gap, cần đối chiếu dataset, input/output, nhãn, protocol và metric với paper gốc, chạy baseline theo protocol đó rồi mới thử biến thể SRO. Các bước này **chưa được thể hiện trong repo hiện tại**.
 
 ## 5. Giới hạn và lưu ý khi chạy lại
 

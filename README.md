@@ -6,6 +6,8 @@ Repo này lưu notebook, báo cáo kết quả và ghi chú tiếng Việt cho c
 
 Đây là phép đánh giá retrieval nhẹ trên một mẫu của **BEIR SciFact**, dùng test split qrels. Nó so sánh checkpoint `knowledgeable-ai/kpr-bge-base-en-v1.5` với baseline `BAAI/bge-base-en-v1.5`.
 
+**Phạm vi:** Notebook chỉ chạy phép so sánh inference giữa hai checkpoint có sẵn. KPR thuộc paper *Dynamic Injection of Entity Knowledge into Dense Retrievers*, khác sáu paper nhóm trình bày (TRA-RAG, HEAR-RAG, SG-RAG, FACTA, CIRAG, Fact-Grounding Gap). Repo này chưa thể hiện việc reproduce các paper đó hoặc benchmark Fact-Grounding Gap với SRO–TRA–uncertainty. Xem [báo cáo chi tiết về model, kết quả và mức độ tái tạo](reports/kpr-bge-scifact-model-benchmark.md).
+
 ### Dữ liệu và cách lấy mẫu
 
 - Có 300 truy vấn SciFact đủ nhãn; notebook chọn 40 truy vấn bằng seed 42.
