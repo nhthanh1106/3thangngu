@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5f1">
+  <title>Hành trình reproduce Fact-Grounding</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172421;
+      --muted: #5c6a65;
+      --paper: #f4f5f1;
+      --white: #fff;
+      --line: #dce3de;
+      --green: #147d62;
+      --green-soft: #e2f1eb;
+      --amber: #aa6618;
+      --amber-soft: #fff0d9;
+      --red: #a84942;
+      --red-soft: #fae9e6;
+      --blue: #37698d;
+      --blue-soft: #e7f0f6;
+      --shadow: 0 18px 48px rgba(23, 36, 33, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 82% 0%, rgba(20,125,98,.09), transparent 34rem),
+        var(--paper);
+      color: var(--ink);
+      font: 16px/1.55 "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+    }
+    a { color: var(--green); text-underline-offset: 3px; }
+    a:hover { color: #0b5845; }
+    .page { width: min(1080px, calc(100% - 36px)); margin: 0 auto; padding: 48px 0 64px; }
+    .eyebrow { margin: 0 0 10px; color: var(--green); font-size: .78rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 820px; margin-bottom: 14px; font-size: clamp(2.2rem, 5vw, 4.2rem); line-height: 1.04; letter-spacing: -.055em; }
+    h2 { margin-bottom: 7px; font-size: clamp(1.35rem, 2.5vw, 1.9rem); letter-spacing: -.035em; }
+    h3 { margin-bottom: 6px; font-size: 1rem; }
+    .lede { max-width: 760px; margin-bottom: 25px; color: var(--muted); font-size: 1.08rem; }
+    .topline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 22px; }
+    .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px; font-size: .82rem; font-weight: 650; }
+    .pill.done { color: #0d634c; background: var(--green-soft); }
+    .pill.pending { color: #87500e; background: var(--amber-soft); }
+    .pill.neutral { color: var(--blue); background: var(--blue-soft); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(250px, .7fr); gap: 18px; align-items: stretch; }
+    .hero-card, .score-card { border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.82); box-shadow: var(--shadow); }
+    .hero-card { padding: 26px; }
+    .hero-card p:last-child { margin-bottom: 0; }
+    .score-card { display: grid; align-content: center; padding: 26px; background: #173b34; color: #f5fbf7; }
+    .score-caption { color: #bbd5ca; font-size: .85rem; }
+    .score-row { display: flex; align-items: baseline; gap: 12px; margin: 5px 0 4px; }
+    .score-main { font-size: clamp(3.2rem, 7vw, 5.2rem); font-weight: 750; line-height: 1; letter-spacing: -.07em; font-variant-numeric: tabular-nums; }
+    .score-change { color: #9ee0c4; font-size: .95rem; font-weight: 700; }
+    .score-foot { margin: 0; color: #d6e5dc; font-size: .9rem; }
+    .section { margin-top: 42px; }
+    .section-intro { margin-bottom: 18px; color: var(--muted); }
+    .scope-box { padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.78); }
+    .scope-box > p:last-child { margin-bottom: 0; }
+    .data-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 22px 0; }
+    .data-step { padding-left: 13px; border-left: 2px solid #b8d9cc; }
+    .data-step strong { display: block; margin-bottom: 5px; }
+    .data-step span { color: var(--muted); font-size: .88rem; }
+    .pair-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 18px 0 12px; }
+    .pair-count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 9px 13px; padding: 15px 17px; border-radius: 13px; background: var(--green-soft); }
+    .pair-count strong { color: #105d48; font-size: 1.8rem; font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+    .pair-count span { color: #31594c; font-size: .9rem; }
+    .format-line { display: block; margin: 14px 0; padding: 13px 15px; border-radius: 10px; background: #edf1ee; color: #2c4940; font-size: .9rem; overflow-wrap: anywhere; }
+    .label-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 15px 0; }
+    .label-item { padding: 12px 14px; border-radius: 11px; background: #f1f4f1; }
+    .label-item strong { display: block; margin-bottom: 3px; }
+    .insight-band { padding: 21px 22px; border: 1px solid #bdd8cc; border-radius: 17px; background: #edf6f1; }
+    .decision-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 22px; align-items: start; }
+    .decision-notes { display: grid; gap: 13px; }
+    .decision-note { padding-left: 13px; border-left: 2px solid #9dc9b5; }
+    .decision-note p { margin: 4px 0 0; color: var(--muted); }
+    .metric-layout { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 22px; align-items: center; }
+    .f1-plot { padding: 12px 2px; }
+    .bar-item { margin: 14px 0 20px; }
+    .bar-label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; font-size: .92rem; }
+    .bar-track { height: 13px; overflow: hidden; border-radius: 99px; background: #e0e7e2; }
+    .bar-fill { height: 100%; border-radius: inherit; }
+    .bar-fill.paper { width: 78.5%; background: #81958d; }
+    .bar-fill.repro { width: 79.0714%; background: var(--green); }
+    .bar-note { margin: -6px 0 0; color: var(--muted); font-size: .82rem; }
+    .table-wrap { overflow-x: auto; border-top: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+    th { color: var(--muted); font-size: .8rem; font-weight: 650; }
+    td { font-size: .92rem; }
+    td.num { text-align: right; }
+    .caution { margin-top: 14px; padding: 13px 15px; border-left: 3px solid #d28b2e; border-radius: 0 10px 10px 0; background: var(--amber-soft); color: #674311; font-size: .9rem; }
+    .timeline { position: relative; display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+    .timeline::before { position: absolute; top: 13px; bottom: 22px; left: 16px; width: 2px; background: var(--line); content: ""; }
+    .event { position: relative; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 16px; padding: 0 0 22px; }
+    .event-mark { z-index: 1; display: grid; width: 34px; height: 34px; place-items: center; border: 2px solid var(--paper); border-radius: 50%; background: var(--green); color: white; font-size: .78rem; font-weight: 750; }
+    .event.pending .event-mark { background: var(--amber); }
+    .event-copy { padding-top: 3px; }
+    .event-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .event-meta h3 { margin: 0; }
+    .event-copy p { max-width: 820px; margin: 5px 0 0; color: var(--muted); }
+    .tag { padding: 3px 8px; border-radius: 999px; background: #e9eeeb; color: #40524b; font-size: .73rem; font-weight: 650; }
+    .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    .simple-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+    .simple-list li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .simple-list li:last-child { border-bottom: 0; }
+    .small-note { color: var(--muted); font-size: .85rem; }
+    .status-text { flex: 0 0 auto; font-size: .8rem; font-weight: 700; }
+    .status-text.ready { color: var(--green); }
+    .status-text.wait { color: var(--amber); }
+    .finding { padding: 17px 18px; border: 1px solid #edc5be; border-radius: 14px; background: var(--red-soft); }
+    .finding h3 { color: #803830; }
+    .finding p { margin: 0; color: #70413b; }
+    .file-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .file-list code { color: #334b43; font-size: .9rem; overflow-wrap: anywhere; }
+    .footer { display: flex; flex-wrap: wrap; gap: 14px 22px; margin-top: 42px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .86rem; }
+    .footer a { font-weight: 600; }
+    @media (max-width: 760px) {
+      .page { padding-top: 30px; }
+      .hero-grid, .metric-layout, .columns { grid-template-columns: 1fr; }
+      .hero-card, .score-card { border-radius: 16px; }
+      .metric-layout { gap: 6px; }
+      .data-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pair-counts, .label-pair { grid-template-columns: 1fr; }
+      .decision-grid { grid-template-columns: 1fr; }
+      .section { margin-top: 34px; }
+      th, td { padding-right: 8px; padding-left: 8px; }
+    }
+    @media print {
+      body { background: white; }
+      .page { width: 100%; padding: 0; }
+      .hero-card, .score-card { box-shadow: none; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <p class="eyebrow">Research log · EMNLP 2026</p>
+      <h1>Hành trình reproduce mô hình Fact-Grounding</h1>
+      <p class="lede">Phần đã tái lập là bộ phân loại evidence sufficiency của paper: fine-tune DeBERTa-v3-large trên dữ liệu hop-level của MuSiQue, rồi kiểm tra lại checkpoint trên dev. Đây chưa phải tái lập toàn bộ hệ thống multi-hop QA và kết quả re-retrieval của paper.</p>
+      <div class="topline">
+        <span class="pill done"><span class="dot"></span>MuSiQue in-domain: đã chạy và kiểm tra</span>
+        <span class="pill pending"><span class="dot"></span>Cross-domain: đã chuẩn bị, chưa có metrics</span>
+      </div>
+    </header>
+
+    <section class="hero-grid" aria-label="Kết quả chính">
+      <div class="hero-card">
+        <p class="eyebrow">Câu hỏi nghiên cứu</p>
+        <h2>Evidence có đủ để trả lời sub-question không?</h2>
+        <p>Mô hình nhận <strong>sub-question + các passage đã tích lũy</strong>, rồi phân loại thành NOT-ANSWERABLE (0) hoặc ANSWERABLE (1). Đây là bộ phân loại sufficiency của evidence, không trực tiếp chấm câu trả lời cuối hay độ đúng của claim.</p>
+        <p class="small-note">Model: <code>microsoft/deberta-v3-large</code> · ngưỡng quyết định: 0.5 · seed: 42</p>
+      </div>
+      <div class="score-card">
+        <span class="score-caption">MuSiQue dev · F1 mới chạy</span>
+        <div class="score-row"><span class="score-main">0.7907</span><span class="score-change">+0.0057 so với paper</span></div>
+        <p class="score-foot">Paper: 0.785 · 6.404 mẫu · checkpoint reload ổn định</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="scope-title">
+      <p class="eyebrow">Bắt đầu từ bài toán và dữ liệu</p>
+      <h2 id="scope-title">Mình reproduce chính xác phần nào?</h2>
+      <div class="scope-box">
+        <p>Paper dùng một mô hình quyết định ở từng reasoning hop: với <strong>sub-question hiện tại + evidence đã lấy được</strong>, evidence có đủ để trả lời sub-question không? DeBERTa chỉ trả về nhãn và xác suất ANSWERABLE; nó <strong>không sinh câu trả lời</strong>. Paper dùng tín hiệu này để phát hiện hop thiếu evidence rồi điều phối retrieval tiếp. Trong dự án hiện tại, phần đã chạy là huấn luyện/kiểm tra classifier và in-domain MuSiQue; phần so sánh end-to-end có và không có điều phối retrieval vẫn chưa được chạy.</p>
+
+        <div class="data-steps" aria-label="Cách hình thành một mẫu huấn luyện">
+          <div class="data-step"><strong>1 · Câu QA nhiều hop</strong><span>Lấy split train/dev chính thức của MuSiQue, giữ nguyên phân chia.</span></div>
+          <div class="data-step"><strong>2 · Tách theo hop</strong><span>Mỗi bước có sub-question riêng và các passage retriever đã gom đến bước đó.</span></div>
+          <div class="data-step"><strong>3 · Gán nhãn sufficiency</strong><span>Code upstream thử thay evidence ở một hop bằng gold passages rồi chạy lại QA.</span></div>
+          <div class="data-step"><strong>4 · Fine-tune classifier</strong><span>DeBERTa học phân loại cặp sub-question/evidence thành 0 hoặc 1.</span></div>
+        </div>
+
+        <p><strong>Quy tắc nhãn trong pipeline counterfactual của repository:</strong> nếu thay evidence ở hop đó bằng gold passages làm câu trả lời cuối trở nên đúng, evidence cũ ở hop đó được xem là thiếu (0 = NOT-ANSWERABLE/INSUFFICIENT). Nếu thay gold không sửa được câu trả lời cuối, mẫu được gán đủ (1 = ANSWERABLE/SUFFICIENT). Đây là nhãn theo phép thử counterfactual của pipeline, không phải cặp câu hỏi–câu trả lời văn bản để mô hình học sinh câu trả lời.</p>
+
+        <div class="pair-counts" aria-label="Số mẫu train và dev">
+          <div class="pair-count"><strong>46.610</strong><span>mẫu train: (sub-question, evidence, label)</span></div>
+          <div class="pair-count"><strong>6.404</strong><span>mẫu dev: (sub-question, evidence, label)</span></div>
+        </div>
+        <p class="small-note"><strong>Đếm cho đúng:</strong> đây là số mẫu theo hop, không phải số QA gốc duy nhất. Một QA nhiều hop có thể tạo nhiều mẫu. CSV chính thức chỉ còn hai cột <code>text,label</code>, không còn <code>qid</code>/hop ID, nên không thể khôi phục chính xác có bao nhiêu câu QA gốc đã sinh ra các dòng này. Notebook của mình dùng các CSV chính thức có sẵn; không tự tạo lại hay đổi nhãn training data.</p>
+        <code class="format-line">Sub-question: {câu hỏi con}<br><br>Passages:<br>[1] {title}: {nội dung evidence} ...</code>
+        <div class="label-pair">
+          <div class="label-item"><strong>0 · NOT-ANSWERABLE</strong><span class="small-note">Passages hiện có chưa đủ để trả lời sub-question.</span></div>
+          <div class="label-item"><strong>1 · ANSWERABLE</strong><span class="small-note">Passages hiện có chứa đủ thông tin cần cho sub-question.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="metrics-title">
+      <p class="eyebrow">So sánh in-domain</p>
+      <h2 id="metrics-title">F1 gần paper; precision/recall lệch theo hướng khác</h2>
+      <p class="section-intro">Fresh inference được tính lại từ checkpoint đã lưu trên toàn bộ 6.404 dòng MuSiQue dev.</p>
+      <div class="metric-layout">
+        <div class="f1-plot" role="img" aria-label="F1 của paper là 0.785; F1 reproduce là 0.7907">
+          <div class="bar-item">
+            <div class="bar-label"><span>Paper · Table 4</span><strong>0.785</strong></div>
+            <div class="bar-track"><div class="bar-fill paper"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-label"><span>Reproduce · fresh checkpoint inference</span><strong>0.7907</strong></div>
+            <div class="bar-track"><div class="bar-fill repro"></div></div>
+          </div>
+          <p class="bar-note">Thanh biểu diễn F1 trên thang 0–1. Mức chênh là +0.57 điểm phần trăm F1.</p>
+        </div>
+        <div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Metric</th><th class="num">Paper</th><th class="num">Reproduce</th><th class="num">Chênh lệch</th></tr></thead>
+              <tbody>
+                <tr><td>Precision</td><td class="num">0.805</td><td class="num">0.8847</td><td class="num">+0.0797</td></tr>
+                <tr><td>Recall</td><td class="num">0.765</td><td class="num">0.7148</td><td class="num">−0.0502</td></tr>
+                <tr><td>F1</td><td class="num">0.785</td><td class="num">0.7907</td><td class="num">+0.0057</td></tr>
+                <tr><td>Accuracy</td><td class="num">0.794*</td><td class="num">0.8142</td><td class="num">+0.0202*</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="caution"><strong>Đọc đúng kết quả:</strong> F1 gần paper nhưng không có nghĩa là reproduce hoàn toàn giống paper; precision cao hơn còn recall thấp hơn. Accuracy 0.794 của paper được trích từ setting/bảng khác, nên chưa nên coi chênh lệch accuracy là so sánh ngang hàng.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="insight-title">
+      <p class="eyebrow">Insight rút ra từ kết quả hiện có</p>
+      <h2 id="insight-title">F1 gần paper, nhưng quyết định ở ngưỡng 0,5 có trade-off rõ</h2>
+      <p class="section-intro">Trên MuSiQue dev, F1 là 0.7907 so với 0.785 của paper. Precision cao hơn 7,97 điểm phần trăm, recall thấp hơn 5,02 điểm. Vì vậy có thể nói operating point hiện tại thiên về precision khi dự đoán ANSWERABLE; chưa thể nói toàn hệ thống QA tốt hơn.</p>
+      <div class="insight-band">
+        <div class="decision-grid">
+          <div>
+            <h3>Confusion matrix · hàng = nhãn thật, cột = dự đoán</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th></th><th>Dự đoán thiếu (0)</th><th>Dự đoán đủ (1)</th></tr></thead>
+                <tbody>
+                  <tr><td>Thật sự thiếu (0)</td><td class="num"><strong>2.966</strong></td><td class="num">293</td></tr>
+                  <tr><td>Thật sự đủ (1)</td><td class="num">897</td><td class="num"><strong>2.248</strong></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="small-note">Nếu nhãn 0 kích hoạt retrieval: mô hình bắt được 2.966/3.259 mẫu thật sự thiếu evidence (91,0%). Nhưng 293 mẫu thiếu bị dự đoán là đủ có nguy cơ dừng retrieval sớm.</p>
+          </div>
+          <div class="decision-notes">
+            <div class="decision-note"><strong>Retrieval thừa cũng đáng kể</strong><p>Trong 3.863 lần dự đoán “thiếu” và sẽ kích hoạt retrieval, 897 mẫu thực ra đã đủ evidence (23,2%). Đây là số quyết định trên dev, chưa phải số tài liệu hay chi phí đo được trong pipeline end-to-end.</p></div>
+            <div class="decision-note"><strong>Đây là insight vận hành có thể kiểm chứng tiếp</strong><p>Khi tích hợp, cần đặt cạnh nhau chi phí bỏ sót evidence thiếu và chi phí retrieval thừa; sau đó đo answer EM/F1, số lượt retrieval và latency cho pipeline có/không có decision model.</p></div>
+            <div class="decision-note"><strong>Reproduction cũng phát hiện lỗi provenance</strong><p>Prediction cũ có F1 0.4393 không khớp checkpoint; inference mới cho 0.7907 và reload ổn định. Nguyên nhân file cũ lệch chưa được xác định, nên kết quả mới cần được gắn rõ với checkpoint/version tạo ra nó.</p></div>
+          </div>
+        </div>
+        <div class="caution"><strong>Điều chưa thể kết luận:</strong> chưa chạy so sánh end-to-end có/không có decision model, và chưa có metrics HotpotQA/FiQA. Vì vậy chưa có bằng chứng hiện tại rằng mô hình cải thiện điểm QA cuối, tiết kiệm retrieval, hay generalize sang domain khác.</div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="journey-title">
+      <p class="eyebrow">Các checkpoint của dự án</p>
+      <h2 id="journey-title">Từ protocol đến kết quả có thể kiểm tra lại</h2>
+      <ol class="timeline">
+        <li class="event">
+          <span class="event-mark">1</span>
+          <div class="event-copy"><div class="event-meta"><h3>Đối chiếu paper và repository chính thức</h3><span class="tag">Hoàn tất</span></div><p>Xác nhận task là phân loại sufficiency theo từng hop; base model DeBERTa-v3-large; F1 chọn checkpoint; threshold 0.5. Không tìm thấy checkpoint fine-tuned chính thức nên chuẩn bị train từ base model.</p></div>
+        </li>
+        <li class="event">
+          <span class="event-mark">2</span>
+          <div class="event-copy"><div class="event-meta"><h3>Giữ nguyên split và audit dữ liệu</h3><span class="tag">Hoàn tất</span></div><p>Train có 46.610 dòng, dev có 6.404 dòng; giữ official split và không có exact-text overlap train/dev. Nhãn 0 = NOT-ANSWERABLE, 1 = ANSWERABLE. Các text trùng trong split được giữ theo dữ liệu nguồn.</p></div>
+        </li>
+        <li class="event">
+          <span class="event-mark">3</span>
+          <div class="event-copy"><div class="event-meta"><h3>Dò cấu hình để fit Kaggle GPU</h3><span class="tag">Nhiều vòng thử</span></div><p>Các profile đầu gặp OOM hoặc lỗi gradient checkpointing; profile tiếp theo dự báo thời gian qua giới hạn runtime nên dừng trước full train. Sau đó chuyển sang notebook có log trực tiếp và checkpoint để theo dõi quá trình thực thi.</p></div>
+        </li>
+        <li class="event">
+          <span class="event-mark">4</span>
+          <div class="event-copy"><div class="event-meta"><h3>Fine-tune và chọn checkpoint tốt nhất</h3><span class="tag">Đã có checkpoint</span></div><p>Training run ghi nhận khoảng 17.102 giây (4 giờ 45 phút), kết thúc ở global step 11.656. Checkpoint chọn theo dev F1 nằm tại step 2.914; metadata ghi best F1 = 0.790714. Chạy trên Kaggle với T4 ×2.</p></div>
+        </li>
+        <li class="event">
+          <span class="event-mark">5</span>
+          <div class="event-copy"><div class="event-meta"><h3>Nạp checkpoint lại, inference toàn dev</h3><span class="tag">Hoàn tất trên Kaggle</span></div><p>Notebook verifier chạy đủ 6.404 mẫu trong khoảng 700,7 giây. Nạp lại checkpoint cho 3 mẫu cho chênh lệch xác suất tối đa 2,24×10⁻⁸ (ngưỡng 0.001), nên kiểm tra reload đạt.</p></div>
+        </li>
+        <li class="event pending">
+          <span class="event-mark">6</span>
+          <div class="event-copy"><div class="event-meta"><h3>Chạy benchmark ngoài miền</h3><span class="tag">Chưa có kết quả chạy</span></div><p>Đã chuẩn bị các ví dụ và notebook EDA, nhưng workspace hiện chưa có output metrics của lần chạy cross-domain. Cần đồng bộ nguồn checkpoint/dataset của notebook với tài khoản Kaggle đang dùng trước khi chạy.</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="section columns" aria-label="Dữ liệu đánh giá và lưu ý">
+      <div>
+        <p class="eyebrow">Cross-domain EDA đã chuẩn bị</p>
+        <h2>Benchmark và trạng thái</h2>
+        <ul class="simple-list">
+          <li><span><strong>MuSiQue</strong><br><span class="small-note">300 ví dụ cân bằng trong EDA; ngoài ra đã infer full dev 6.404 mẫu</span></span><span class="status-text ready">Đã có full-dev score</span></li>
+          <li><span><strong>HotpotQA</strong><br><span class="small-note">300 ví dụ paired: cùng câu hỏi, evidence đủ / thiếu</span></span><span class="status-text wait">Chưa chạy</span></li>
+          <li><span><strong>FiQA-2018</strong><br><span class="small-note">42 passage judgments, một reviewer; subset nhỏ</span></span><span class="status-text wait">Chưa chạy</span></li>
+          <li><span><strong>SciFact</strong><br><span class="small-note">Không map SUPPORT/REFUTE sang answerability</span></span><span class="status-text">Không đánh giá</span></li>
+        </ul>
+        <p class="small-note">MuSiQue full-dev metric và mẫu 300 dòng trong EDA là hai phạm vi đánh giá khác nhau. Notebook EDA ở local đang khai báo nguồn Kaggle dưới slug <code>nguynbquangminh</code>; cần đổi/kiểm tra nguồn trước khi chạy trên <code>huthnhnguyn</code>.</p>
+      </div>
+      <div>
+        <p class="eyebrow">Phát hiện cần giữ lại</p>
+        <div class="finding">
+          <h3>File prediction cũ không khớp checkpoint</h3>
+          <p>Text, label và thứ tự hàng đều trùng MuSiQue dev, nhưng xác suất/dự đoán trong artifact cũ khác inference mới; max absolute probability difference = 0.9873. Metrics cũ có F1 0.4393. Báo cáo mới xác nhận inference của checkpoint cho F1 0.7907 và reload ổn định. Không nên dùng lại prediction cũ như kết quả của checkpoint này.</p>
+        </div>
+        <div style="margin-top:18px">
+          <h3>File kết quả được tạo trong Kaggle run</h3>
+          <ul class="file-list">
+            <li><code>/kaggle/working/checkpoint_reload_report.json</code></li>
+            <li><code>/kaggle/working/recomputed_in_domain_metrics.json</code></li>
+            <li><code>/kaggle/working/recomputed_in_domain_predictions.csv</code></li>
+            <li><code>/kaggle/working/checkpoint_reload_samples.csv</code></li>
+          </ul>
+          <p class="small-note">Đây là các đường dẫn trong Kaggle runtime/output; không phải file đã được ghi đè vào dataset input ban đầu.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="https://aclanthology.org/2026.emnlp-main.834/" target="_blank" rel="noreferrer">Paper</a>
+      <a href="https://github.com/RichardZhu123/fact-grounding-gap" target="_blank" rel="noreferrer">Official repository</a>
+      <a href="https://www.kaggle.com/code/huthnhnguyn/fact-grounding-training-reproduction-live-logs" target="_blank" rel="noreferrer">Kaggle training notebook</a>
+      <a href="https://www.kaggle.com/code/huthnhnguyn/fact-grounding-checkpoint-reload-verification/log" target="_blank" rel="noreferrer">Kaggle verification run</a>
+      <a href="03_verify_persisted_checkpoint.ipynb">Verifier notebook local</a>
+      <a href="kaggle_15min_eda/15min_eda_pipeline.ipynb">EDA notebook local</a>
+      <span>Workspace evidence reviewed: 18 Nov 2026</span>
+    </footer>
+  </main>
+</body>
+</html>

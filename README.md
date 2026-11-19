@@ -45,3 +45,7 @@ Trong mẫu này, KPR bằng BGE ở Recall@10 nhưng thấp hơn ở các metri
 ## Giới hạn và bước tiếp theo
 
 Đây là lần kiểm tra ban đầu trên mẫu có kiểm soát, không phải tái lập đầy đủ kết quả của BEIR hay bài báo KPR. Muốn kết luận chắc hơn, cần chạy toàn bộ test queries trên toàn bộ corpus ứng viên, báo cáo khoảng tin cậy bằng so sánh paired theo truy vấn, và lặp lại đo thời gian.
+
+## Reproduction fact-grounding classifier
+
+Notebook, checkpoint DeBERTa-v3-large và hướng dẫn tái lập bài fact-grounding được lưu trong [`fact_grounding_reproduction/`](fact_grounding_reproduction/). Xem [README hướng dẫn](fact_grounding_reproduction/README.md) để biết dữ liệu, kết quả, giới hạn và cách lấy checkpoint qua Git LFS.
