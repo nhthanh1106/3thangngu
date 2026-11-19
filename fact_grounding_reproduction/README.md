@@ -78,7 +78,7 @@ To clone and retrieve the checkpoint:
 
 ```bash
 git lfs install
-git clone https://github.com/nhthanh1106/3thangngu.git
+git clone --branch codex/fact-grounding-reproduction https://github.com/nhthanh1106/3thangngu.git
 cd 3thangngu
 git lfs pull
 ```
