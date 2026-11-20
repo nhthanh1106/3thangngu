@@ -6,7 +6,7 @@ Repo này lưu notebook, báo cáo kết quả và ghi chú tiếng Việt cho c
 
 Đây là phép đánh giá retrieval nhẹ trên một mẫu của **BEIR SciFact**, dùng test split qrels. Nó so sánh checkpoint `knowledgeable-ai/kpr-bge-base-en-v1.5` với baseline `BAAI/bge-base-en-v1.5`.
 
-**Phạm vi:** Notebook chỉ chạy phép so sánh inference giữa hai checkpoint có sẵn. KPR thuộc paper *Dynamic Injection of Entity Knowledge into Dense Retrievers*, khác sáu paper nhóm trình bày (TRA-RAG, HEAR-RAG, SG-RAG, FACTA, CIRAG, Fact-Grounding Gap). Repo này chưa thể hiện việc reproduce các paper đó hoặc benchmark Fact-Grounding Gap với SRO–TRA–uncertainty. Xem [báo cáo chi tiết về model, kết quả và mức độ tái tạo](reports/kpr-bge-scifact-model-benchmark.md).
+**Phạm vi:** Notebook này chỉ chạy phép so sánh inference giữa hai checkpoint có sẵn. KPR thuộc paper *Dynamic Injection of Entity Knowledge into Dense Retrievers*, khác sáu paper nhóm trình bày (TRA-RAG, HEAR-RAG, SG-RAG, FACTA, CIRAG, Fact-Grounding Gap). Notebook KPR không benchmark Fact-Grounding Gap với SRO–TRA–uncertainty. Xem [báo cáo chi tiết về model, kết quả và mức độ tái tạo](reports/kpr-bge-scifact-model-benchmark.md).
 
 ### Dữ liệu và cách lấy mẫu
 
@@ -51,3 +51,5 @@ Trong mẫu này, KPR bằng BGE ở Recall@10 nhưng thấp hơn ở các metri
 ## Reproduction fact-grounding classifier
 
 Notebook, checkpoint DeBERTa-v3-large và hướng dẫn tái lập bài fact-grounding được lưu trong [`fact_grounding_reproduction/`](fact_grounding_reproduction/). Xem [README hướng dẫn](fact_grounding_reproduction/README.md) để biết dữ liệu, kết quả, giới hạn và cách lấy checkpoint qua Git LFS.
+
+Một lượt Kaggle **riêng** trên tài khoản `hungluongduc` đã chạy đủ ba epoch và đạt MuSiQue dev F1 = 0,7936 ở checkpoint epoch 2, so với 0,785 trong paper. Xem [báo cáo kết quả và các khác biệt về protocol](reports/fact-grounding-gap-deberta-musique-kaggle-results.md). Checkpoint của lượt này nằm ở output Kaggle stage 1, không phải checkpoint trong `fact_grounding_reproduction/`.
