@@ -1,1 +1,11 @@
 /kaggle_eval_data/
+/datasets/
+/upstream/
+/logs/
+**/__pycache__/
+**/download_cache/
+*.zip
+*.parquet
+predictions/*.jsonl
+*.tmp
+*.part

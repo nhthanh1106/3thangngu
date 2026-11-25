@@ -1,43 +1,44 @@
-# Research findings
+# Research Findings
 
-## Status
+## Status (Updated 2026-11-26)
 
-At 09:21:32 Asia/Bangkok on 2026-11-18, the earlier CLI-account training version 9 was still `RUNNING` after 4 hours 20 minutes. The Kaggle CLI returned no notebook logs or output files, so its stage remains unconfirmed. A second notebook was uploaded to the account active in the browser side tab and Version 1 began running on GPU T4 x2. By 09:43 Asia/Bangkok, its visible trainer log was loss 0.5422, grad norm 4.6265, epoch 0.09952. This epoch fraction suggests progress beyond the configured 100-step profile, but no explicit `full_training_begin` marker was visible, so the fine-tuning transition remains unconfirmed. The notebook streams subprocess output, emits a 30-second heartbeat, logs training every 10 optimizer steps, and saves recovery checkpoints by epoch. No completed training metrics or checkpoint are verified yet. The browser profile displays Hữu Thành Nguyễn; its URL slug is `huthnhnguyn`, not the requested spelling `huuthanhngyn`.
+Training, reload verification, and comprehensive 8-benchmark (9-track) evaluation of the reproduced `microsoft/deberta-v3-large` fact-grounding classifier are **complete**.
 
-This is a live report. Kaggle training versions 3 through 8 all stopped before full fine-tuning and produced no checkpoint or reproduction metrics. The run detected two Tesla T4 GPUs with 14.56 GiB each. Version 3 exhausted memory at per-device micro-batches 8 and 4. Version 4 failed in PyTorch reentrant gradient checkpointing during backward propagation. Version 5's fixed-padding profile took 5.593 seconds per optimizer step and projected 16.98 hours through epoch 3 with 25% overhead. Version 6's dynamic-padding profile used micro-batch 2, gradient accumulation 4, and effective batch 16. It took 440.99 seconds for 100 optimizer steps (4.410 seconds/step), with peak allocated memory of 11.161 and 9.247 GiB; projected time through epoch 3 with 25% overhead was 13.39 hours. Version 7 used non-reentrant gradient checkpointing, dynamic padding, micro-batch 8, accumulation 1, and effective batch 16. It took 401.93 seconds for 100 optimizer steps (4.019 seconds/step), with reported peak allocated memory of 8.148 and 2.689 GiB; projected time through epoch 3 with 25% overhead was 12.20 hours. Version 8 confirmed DataParallel across both T4s, global batch 16, and length grouping. It took 375.19 seconds for 100 steps (3.752 seconds/step), with reported peak memory of 8.151 and 2.753 GiB; projection through epoch 3 with overhead was 11.39 hours. The two-GPU memory values remain asymmetric. The safety guard stopped versions 5–8 before full training; no checkpoint was saved. Version 9 was pushed at 05:00 Asia/Bangkok to launch two-process DDP explicitly while preserving all training data, the 512-token cap, and effective batch 16. The profile or later training stage is not visible via the CLI, so the active stage is unconfirmed. The preflight cutoff remains seven projected hours through epoch 3 including 25% overhead, below Kaggle's observed eight-hour notebook limit. If early stopping requires later epochs than the paper's reported convergence at epoch 3, the job could still exceed the platform limit.
+- **Canonical checkpoint:** `checkpoint/model.safetensors` (`SHA-256: 93ef195f3840689a70094c8fdbe4c1126a86e9faf1b9382a3040e3d32b470260`), trained on Kaggle `Tesla T4 × 2` (`huthnhnguyn/fact-grounding-training-reproduction-live-logs`) with dynamic padding, `group_by_length=True`, non-reentrant gradient checkpointing, and effective batch size 16.
+- **Fresh reload verification:** Passed with `max prob diff = 2.24e-8` (tolerance `1e-3`).
+- **8-Benchmark Kaggle run (Version 1):** Succeeded in `1,641.7s` (`27.3 min`) on `Tesla T4 × 2` (`Peak VRAM: 5.15 / 4.61 GiB`). All summary CSV/JSON artifacts are stored in [`results/05_eight_benchmark_eval/`](results/05_eight_benchmark_eval/).
 
-## A. Reproduction quality
+---
 
-The paper reports MuSiQue development precision 0.805, recall 0.765, and F1 0.785; the paper also reports 0.794 accuracy for its full-input setting. These are reference values, not reproduction results.
+## A. In-Domain Reproduction Quality (`01_musique_dev`, 6,404 hops)
 
-| Metric | Paper | Reproduction | Difference |
-|---|---:|---:|---:|
-| Precision | 0.805 | Pending | Pending |
-| Recall | 0.765 | Pending | Pending |
-| F1 | 0.785 | Pending | Pending |
-| Accuracy | 0.794* | Pending | Pending |
+| Metric | Paper (EMNLP 2026) | Canonical `93ef195f` | Reference v5 `6bbd13d5` | Delta (`93ef` − Paper) |
+|---|---:|---:|---:|---:|
+| Precision | 0.805 | **0.8847** | 0.7709 | +0.0797 |
+| Recall | 0.765 | 0.7148 | 0.8079 | −0.0502 |
+| F1 | 0.785 | **0.7907** | 0.7890 | +0.0057 |
+| Accuracy | 0.794* | **0.8142** | 0.7878 | +0.0202* |
+| AUROC / PR-AUC | — | **0.8764 / 0.8913** | 0.8755 / 0.8958 | — |
+| ECE-15 (Raw → Temp Scaled `T=1.929`) | — | **0.1176 → 0.0372** | 0.1378 | — |
 
-\*The paper's 0.794 accuracy comes from its full-input table/setting; verify metric comparability before interpreting the difference.
+*\*The paper's 0.794 accuracy comes from its full-input Table 5 setting.*
 
-No successful reproduction is claimed until the fine-tuned checkpoint reload check passes and the full MuSiQue dev metrics are available. The browser-side run is still active; its transition past profile is not yet verified, and checkpoint/full dev metrics are pending.
+---
 
-## B. Cross-domain generalization
+## B. Cross-Domain & Multi-Task Generalization (8 Benchmarks / 9 Tracks)
 
-Notebook 02 has a fixed threshold of 0.5 and uses the persisted checkpoint without fine-tuning or target-domain threshold tuning. The prepared evaluation set contains 300 MuSiQue rows (150 per class), 300 paired HotpotQA examples (150 per class), and 42 FiQA examples (21 per class). SciFact is deliberately not evaluated because claim-verification verdicts do not directly encode whether passages answer a question. Cross-domain metrics are pending the training/checkpoint milestone and subsequent Kaggle execution.
+Full analysis and published SOTA comparisons are documented in [`reports/eight_benchmark_sota_comparison.md`](reports/eight_benchmark_sota_comparison.md) and [`reports/bottlenecks_and_literature_gap.md`](reports/bottlenecks_and_literature_gap.md). Key empirical findings:
 
-HotpotQA is a task shift as well as a dataset shift: it uses full questions rather than MuSiQue hop sub-questions. Positives contain both annotated support sentences; negatives replace one support sentence with a length-matched non-support sentence. The 20-pair manual spot check and exclusions are documented in `datasets/manual_inspection.md`. FiQA uses a 21-pair single-reviewer answerability subset; its retrieval qrels are not used as binary labels. MTEB marks its license as not specified, so the derived package remains private with license metadata `unknown`.
+1. **Format shift dominates domain shift:** On MuSiQue-Full, sub-question hops (`02b`) achieve **AUROC `0.8986` / F1 `0.8375`** (`0.8610` calibrated), while full multi-hop questions (`02a`) drop to **AUROC `0.7755` / F1 `0.6806`** (−12.3 AUROC points). Conversely, cross-domain news (`07_multihop_rag_news`, COLM 2024) achieves **AUROC `0.8911`**, **PR-AUC `0.9850`**, and catches **96.3% (`290/301`)** of `null_query` items.
+2. **Incomplete-information multi-hop transfer is strong:** On `03_iirc_dev` (1,301 native questions), zero-shot accuracy reaches **76.48%** (**78.40%** calibrated), **F1 `0.8376`** (**`0.8593`** calibrated), **AUROC `0.7914`**, and calibrated **ECE `0.0776`**.
+3. **1,500-char / 512-token truncation drives the worst OOD failure:** `05_2wiki_support_pairs` has `char_trunc_rate = 95.9%`, dragging AUROC down to `0.6012` (and `06_faitheval_pairs` truncates `50.9%` of rows).
+4. **Adversarial lexical overlap breaks the fixed `0.5` threshold despite strong ranking:** On `08_squad_v2_dev` and `04_hotpotqa_pairs`, AUROC (`0.8409` / `0.8017`) and Pairwise Accuracy (`88.55%` HotpotQA, `81.83%` FaithEval) remain strong, yet fixed threshold `0.5` triggers heavy false positives (`FP = 4,076` SQuAD2, `2,295` HotpotQA).
+5. **Zero-leakage post-hoc Temperature Scaling works across OOD:** Fitting a single scalar temperature `T = 1.9290` strictly on `01_musique_dev` (NLL `0.5272 → 0.4318`) reduces ECE-15 by **20%–68% on 8 of 9 tracks** without accessing target test labels.
 
-## C. Failure analysis
+---
 
-No model failure cases are available yet. The evaluation notebook will export per-example predictions and errors. After execution, classify observed errors by evidence omission, entity mismatch, relation mismatch, time/number, negation, domain vocabulary, and confidence calibration where the records support those categories. Do not infer a causal shortcut from aggregate metrics alone.
+## C. Limitations & Next Steps
 
-## D. Research implications
-
-The six requested research questions remain open until the evaluation run completes. Current protocol caveats:
-
-1. Cross-domain performance estimates are limited by the constructed HotpotQA subset and the small, single-reviewed FiQA sample.
-2. The question-only ablation is explicitly out-of-distribution and can reveal reliance patterns, but cannot establish that the full model causally ignores evidence.
-3. Lower cross-domain performance, if observed, will not by itself prove overfitting or constitute a novel research result.
-4. SciFact is not a binary answerability benchmark under its released labels, so no score will be reported for it without a separately validated conversion.
-
-The next research direction should depend on actual errors: if the classifier misses altered relations or dates, test a manually validated counterfactual set; if calibration is weak, evaluate held-out calibration methods without tuning on target test data; if HotpotQA performance drops, distinguish question-format/task shift from domain shift using a compatible multi-hop dataset.
+- **Scope boundary:** These results benchmark the standalone evidence-sufficiency classifier. End-to-end multi-hop QA pipeline evaluation (measuring final QA EM/F1, retrieval calls, and latency when pairing the calibrated DeBERTa gate with iterative re-retrieval) remains the next experimental milestone.
+- **Duplicate `qid` note in Version 1 (`02a`/`02b`):** Because answerable/unanswerable contrasts share `id` in `musique_full_v1.0_dev.jsonl`, Version 1 scored 1 half per `qid` (`2,417/4,834` balanced rows on `02a`, `6,404/12,808` hops on `02b`). The ID collision is fixed in `05_full_decision_benchmark_eval.ipynb` for any future rerun.
+- **Promising v2 direction:** Combine sentence pruning (e.g., *Provence*, ICLR 2025) + adversarial hard-negative fine-tuning (SQuAD 2.0 / FaithEval / MuSiQue-Full) + a calibrated Tier-1/Tier-2 cascade gate (DeBERTa 435M at `14–33 ms/example` handling confident cases, escalating grey-zone cases to an LLM judge).

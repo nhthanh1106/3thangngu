@@ -1,0 +1,37 @@
+{
+  "benchmarks": {
+    "01_musique_dev": {
+      "signature": "896eae9344c2d46c085b89572c92b9dd5452ba7916c03fbaa18d399f4a180d9d",
+      "rows_done": 6404,
+      "rows_expected": 6404,
+      "complete": true,
+      "last_updated_utc": "2026-11-21T04:01:49.898765+00:00",
+      "prediction_file": "/kaggle/working/fact_grounding_five_benchmark_eval/predictions/01_musique_dev.jsonl"
+    },
+    "02_hotpotqa_pairs": {
+      "signature": "d663f7f03c0373fb208f0d8ee5e7238dfda6ea86cf023f97b909d9f282204a01",
+      "rows_done": 9088,
+      "rows_expected": 9088,
+      "complete": true,
+      "last_updated_utc": "2026-11-21T04:04:13.660526+00:00",
+      "prediction_file": "/kaggle/working/fact_grounding_five_benchmark_eval/predictions/02_hotpotqa_pairs.jsonl"
+    },
+    "03_2wiki_support_pairs": {
+      "signature": "9ac6b4bf2103ac72f2a2b9c3de3f7e5c8053ed0c774fa323a8e4311879d2a5b4",
+      "rows_done": 7188,
+      "rows_expected": 7188,
+      "complete": true,
+      "last_updated_utc": "2026-11-21T04:09:46.843048+00:00",
+      "prediction_file": "/kaggle/working/fact_grounding_five_benchmark_eval/predictions/03_2wiki_support_pairs.jsonl"
+    },
+    "04_faitheval_pairs": {
+      "signature": "8c086e7c2c82657cd48b8e753428186d9a5ae389d5f25fefa88752e9d2313a7c",
+      "rows_done": 4982,
+      "rows_expected": 4982,
+      "complete": true,
+      "last_updated_utc": "2026-11-21T04:13:00.792805+00:00",
+      "prediction_file": "/kaggle/working/fact_grounding_five_benchmark_eval/predictions/04_faitheval_pairs.jsonl"
+    }
+  },
+  "last_updated_utc": "2026-11-21T04:13:00.792830+00:00"
+}

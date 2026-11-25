@@ -1,0 +1,51 @@
+{
+  "paper": "Diagnosing the Fact-Grounding Gap in Multi-Hop Question Answering (EMNLP 2026)",
+  "paper_url": "https://aclanthology.org/2026.emnlp-main.834/",
+  "kaggle_notebook_url": "https://www.kaggle.com/code/huthnhnguyn/fact-grounding-8-benchmark-decision-eval",
+  "checkpoint_file": "/kaggle/input/datasets/huthnhnguyn/fact-grounding-deberta-v3-large-checkpoint/deberta_fact_grounding_checkpoint/model.safetensors",
+  "checkpoint_sha256": "93ef195f3840689a70094c8fdbe4c1126a86e9faf1b9382a3040e3d32b470260",
+  "checkpoint_bytes": 1740304440,
+  "matches_expected_local_sha256": true,
+  "hardware": {
+    "device": "cuda",
+    "n_gpus": 2,
+    "gpu_names": ["Tesla T4", "Tesla T4"]
+  },
+  "base_protocol": {
+    "max_length": 512,
+    "passage_max_chars": 1500,
+    "threshold": 0.5,
+    "effective_batch_size": 64,
+    "label_mapping": {
+      "0": "NOT-ANSWERABLE",
+      "1": "ANSWERABLE"
+    }
+  },
+  "time_budget_hours": 8.0,
+  "total_examples": 59964,
+  "started_at_utc": "2026-11-25T13:31:08.931480+00:00",
+  "finished_at_utc": "2026-11-25T13:56:40.587015+00:00",
+  "elapsed_hours": 0.4501,
+  "timed_out_at_budget": false,
+  "completed_benchmarks": [
+    "01_musique_dev",
+    "03_iirc_dev",
+    "04_hotpotqa_pairs",
+    "05_2wiki_support_pairs",
+    "06_faitheval_pairs",
+    "07_multihop_rag_news",
+    "08_squad_v2_dev"
+  ],
+  "partial_due_to_duplicate_qid_bug": {
+    "02a_musique_full_q": {"rows_done": 2417, "rows_expected": 4834, "cause": "MuSiQue-Full answerable and unanswerable pairs share identical qid; dedup kept 1 per qid (balanced 49.52% positive)."},
+    "02b_musique_full_hops": {"rows_done": 6404, "rows_expected": 12808, "cause": "Same shared qid collision across MuSiQue-Full pair halves."}
+  },
+  "calibration_fit_on_musique_dev": {
+    "fit_on": "01_musique_dev",
+    "temperature": 1.9289911363118324,
+    "f1_optimal_threshold_on_musique_dev": 0.36,
+    "musique_nll_before": 0.5271767715227886,
+    "musique_nll_after": 0.43179743484657357
+  },
+  "peak_vram_gib_per_gpu": [5.152, 4.607]
+}
