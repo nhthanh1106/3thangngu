@@ -1,80 +1,76 @@
-# Fact-Grounding Classifier Reproduction
+# Fact-Grounding Classifier Reproduction & 8-Benchmark Evaluation
 
-This project reproduces the **DeBERTa-v3-large evidence-sufficiency classifier** from [Diagnosing the Fact-Grounding Gap in Multi-Hop Question Answering](https://aclanthology.org/2026.emnlp-main.834/). The verified work covers fine-tuning from the official data, MuSiQue in-domain evaluation, and checkpoint reload verification. It does **not yet reproduce the paper's complete end-to-end QA/re-retrieval comparisons**.
+This project reproduces the **DeBERTa-v3-large evidence-sufficiency decision classifier** from [Diagnosing the Fact-Grounding Gap in Multi-Hop Question Answering](https://aclanthology.org/2026.emnlp-main.834/) (EMNLP 2026), verifies checkpoint persistence via Git LFS, and evaluates the canonical checkpoint across **8 benchmarks (9 tracks)** spanning in-domain multi-hop hops, native unanswerable multi-hop QA, incomplete-information QA, cross-domain news, faithfulness contrasts, and single-hop answerability control.
 
-## What the model predicts
+## Canonical Checkpoint
 
-For one reasoning hop, the input is a sub-question plus the passages retrieved so far. The classifier predicts whether those passages are sufficient to answer the sub-question:
+- **Location:** [`checkpoint/`](checkpoint/) (Git LFS tracked — see [`checkpoint/README.md`](checkpoint/README.md))
+- **File:** `checkpoint/model.safetensors` (`1,740,304,440` bytes)
+- **Verified SHA-256:** `93ef195f3840689a70094c8fdbe4c1126a86e9faf1b9382a3040e3d32b470260`
+- **Labels:** `0 = NOT-ANSWERABLE`, `1 = ANSWERABLE`
+- **Training run:** [`huthnhnguyn/fact-grounding-training-reproduction-live-logs`](https://www.kaggle.com/code/huthnhnguyn/fact-grounding-training-reproduction-live-logs) (`microsoft/deberta-v3-large`, max length 512, passage cap 1,500 chars, LR `2e-5`, effective batch 16, seed 42, Tesla T4 × 2, Transformers 4.57.1)
+- **Reload check:** Passed (`max prob diff = 2.24e-8` vs tolerance `1e-3`).
 
-- `0`: `NOT-ANSWERABLE` / insufficient evidence
-- `1`: `ANSWERABLE` / sufficient evidence
+*(Note: An earlier reference checkpoint from `nguynbquangminh/fact-grounding-checkpoint`, SHA-256 `6bbd13d5...`, was evaluated in Notebook 04; its summary metrics are preserved in [`results/04_five_benchmark_v5/`](results/04_five_benchmark_v5/) for comparison. The canonical `93ef195f...` checkpoint outperforms it on in-domain accuracy/precision, pairwise accuracy, and false-positive control.)*
 
-This is supervised fine-tuning of a sequence classifier, not fine-tuning a generative model to write answers. The upstream repository's counterfactual labeling code replaces evidence at one hop with gold supporting passages and reruns QA. If that swap fixes the final answer, the original evidence at that hop is labeled insufficient; otherwise it is labeled sufficient. The packaged CSVs only contain `text,label`, so they do not retain the source QA ID or hop ID for row-level tracing.
+---
 
-## Data and training
+## Verified In-Domain Reproduction (`01_musique_dev`, 6,404 hops)
 
-The notebook uses the official preformatted MuSiQue CSVs and preserves their train/dev split:
-
-| Split | Rows | Unit |
-|---|---:|---|
-| Train | 46,610 | Hop-level `(sub-question, passages, label)` examples |
-| Dev | 6,404 | Hop-level `(sub-question, passages, label)` examples |
-
-These are **not counts of unique full QA questions**. One multi-hop QA question can produce multiple hop examples; the CSVs lack IDs needed to recover the number of parent questions. Exact formatted-text overlap between train and dev is zero. Duplicates within each split are preserved to match the official files.
-
-Verified setup: `microsoft/deberta-v3-large`, maximum length 512, learning rate `2e-5`, effective batch size 16, seed 42, positive-class F1 for best-checkpoint selection, and decision threshold 0.5. Kaggle execution used two Tesla T4 GPUs and Transformers 4.57.1. The paper used A100 hardware; this software/hardware difference is a reproduction deviation.
-
-## Verified MuSiQue dev result
-
-Fresh inference from the saved checkpoint processed all 6,404 dev rows:
-
-| Metric | Paper | Reproduced | Difference |
+| Metric | Paper (EMNLP 2026) | Canonical `93ef195f` | Difference |
 |---|---:|---:|---:|
-| Precision | 0.805 | 0.8847 | +0.0797 |
-| Recall | 0.765 | 0.7148 | -0.0502 |
-| F1 | 0.785 | 0.7907 | +0.0057 |
-| Accuracy | 0.794* | 0.8142 | +0.0202* |
+| Precision | 0.805 | **0.8847** | +0.0797 |
+| Recall | 0.765 | 0.7148 | −0.0502 |
+| F1 (Answerable) | 0.785 | **0.7907** | +0.0057 |
+| Accuracy | 0.794* | **0.8142** | +0.0202* |
+| AUROC / PR-AUC | — | **0.8764 / 0.8913** | — |
+| ECE-15 (Raw → Temp Scaled `T=1.929`) | — | **0.1176 → 0.0372** | −68.4% |
 
-The F1 is close to the paper result, while the precision/recall balance differs. The paper's 0.794 accuracy is reported for a different table/setting, so treat that accuracy comparison cautiously.
+---
 
-The fresh checkpoint reload check passed on three deterministic examples: maximum probability difference `2.24e-8` against a tolerance of `0.001`. The full dev inference took about 700.7 seconds on Kaggle T4 x2.
+## 8-Benchmark (9-Track) Evaluation Summary (Notebook 05 — Kaggle T4 × 2, 27.3 min)
 
-**Important artifact finding:** the older saved prediction CSV has the correct dev text/labels/order but does not match the selected checkpoint's predictions (maximum probability difference `0.9873`; its F1 is `0.4393`). Use the recomputed outputs from the verification run, not that stale prediction file. The cause of the mismatch has not been established.
+Executed on Kaggle: [Fact Grounding 8-Benchmark Decision Eval (Version 1)](https://www.kaggle.com/code/huthnhnguyn/fact-grounding-8-benchmark-decision-eval). Full machine-readable outputs are in [`results/05_eight_benchmark_eval/`](results/05_eight_benchmark_eval/).
 
-## Notebooks
+| Track | Benchmark | `n_scored` | Acc (`0.5`) | F1 (`0.5`) | AUROC | PR-AUC | Pairwise Acc | ECE Raw → Cal (`T=1.929`) | Trunc% | Latency |
+|---|---|---:|---:|---:|---:|---:|---:|---|---:|---:|
+| `01` | MuSiQue dev (hops) | 6,404 | 0.8142 | 0.7907 | 0.8764 | 0.8913 | — | 0.1176 → **0.0372** | 0.0% | 26.4 ms |
+| `02a` | MuSiQue-Full (full-q)\* | 2,417 | 0.6967 | 0.6806 | 0.7755 | 0.7479 | — | 0.1953 → **0.0853** | 50.8% | 29.1 ms |
+| `02b` | MuSiQue-Full (sub-q hops)\* | 6,404 | 0.7943 | 0.8375 | **0.8986** | **0.9570** | — | 0.1547 → 0.1482 | 45.0% | 27.2 ms |
+| `03` | IIRC dev (EMNLP'20) | 1,301 | 0.7648 | 0.8376 | 0.7914 | 0.8976 | — | 0.1403 → **0.0776** | 25.7% | 25.7 ms |
+| `04` | HotpotQA pairs | 8,018 | 0.6737 | 0.7382 | 0.8017 | 0.7881 | **0.8855** | 0.2651 → **0.1957** | 0.0% | 13.8 ms |
+| `05` | 2WikiMultiHopQA pairs | 7,188 | 0.5716 | 0.5141 | 0.6012 | 0.5874 | 0.7205 | 0.3287 → **0.2165** | **95.9%** | 32.8 ms |
+| `06` | FaithEval Unanswerable (ICLR'25) | 4,982 | 0.6345 | 0.6922 | 0.7215 | 0.7165 | **0.8183** | 0.2632 → **0.1688** | 50.9% | 27.9 ms |
+| `07` | MultiHop-RAG News (COLM'24) | 2,556 | 0.7148 | 0.8083 | **0.8911** | **0.9850** | — | 0.2794 → 0.3055 | 11.8% | 26.7 ms |
+| `08` | SQuAD 2.0 dev (single-hop ctrl) | 11,873 | 0.6377 | 0.7262 | 0.8409 | 0.8281 | — | 0.3150 → **0.2528** | 4.3% | 16.6 ms |
 
+*\*In Version 1, `02a`/`02b` kept 1 record per unique `qid` (2,417 balanced rows / 6,404 hops) because positive/negative pairs share `id` in `musique_full_v1.0_dev.jsonl`. Fixed in `05_full_decision_benchmark_eval.ipynb` and `scripts/build_full_decision_benchmark_notebook.py` for future reruns.*
+
+---
+
+## Notebooks, Scripts & Reports
+
+### Notebooks
 | File | Purpose | Status |
 |---|---|---|
-| `01_train_fact_grounding_live.ipynb` | Fine-tune the classifier with streamed progress logs and recovery checkpoints | Completed; selected checkpoint is included under `checkpoint/` |
-| `03_verify_persisted_checkpoint.ipynb` | Reload the saved checkpoint and recompute full MuSiQue dev predictions/metrics | Completed on Kaggle |
-| `02_cross_domain_eval.ipynb` | Evaluate the same checkpoint on prepared datasets without fine-tuning | Prepared; no verified cross-domain run metrics yet |
-| `kaggle_15min_eda/15min_eda_pipeline.ipynb` | Short EDA and question-only diagnostic | Prepared; metadata currently points to the older `nguynbquangminh` Kaggle slug and must be aligned before running under `huthnhnguyn` |
+| [`01_train_fact_grounding_live.ipynb`](01_train_fact_grounding_live.ipynb) | Fine-tune DeBERTa-v3-large on MuSiQue hops with live logs & recovery checkpoints | Completed (`checkpoint/` persisted via LFS) |
+| [`03_verify_persisted_checkpoint.ipynb`](03_verify_persisted_checkpoint.ipynb) | Reload saved checkpoint & verify full 6,404 MuSiQue dev predictions | Completed on Kaggle |
+| [`02_cross_domain_eval.ipynb`](02_cross_domain_eval.ipynb) | Initial small cross-domain evaluation script | Superseded by Notebooks 04 & 05 |
+| [`04_five_benchmark_eval.ipynb`](04_five_benchmark_eval.ipynb) | 5-track evaluation run on earlier v5 checkpoint (`6bbd13d5...`) | Completed (`results/04_five_benchmark_v5/`) |
+| [`05_full_decision_benchmark_eval.ipynb`](05_full_decision_benchmark_eval.ipynb) | **Full 8-benchmark (9-track) evaluation + post-hoc Temperature Scaling on canonical `93ef195f...`** | **Completed (`results/05_eight_benchmark_eval/`)** |
 
-## Evaluation data prepared
+### Reports & Analysis
+- [`reports/eight_benchmark_sota_comparison.md`](reports/eight_benchmark_sota_comparison.md): Detailed 8-benchmark evaluation analysis, v5 vs canonical checkpoint comparison, post-hoc calibration results, and published SOTA comparisons (EMNLP'26, ICLR'25 Sufficient Context, ICLR'25 FaithEval, COLM'24 MultiHop-RAG, ICLR'23 SQuAD2).
+- [`reports/bottlenecks_and_literature_gap.md`](reports/bottlenecks_and_literature_gap.md): Plain-language diagnosis of the 5 bottlenecks and mapping to 2024–2026 papers (*Provence, MiniCheck, Sufficient Context, SURE-RAG, UCCI, Verification Without Sufficiency*).
+- [`reports/multihop_rag_2025_2026_survey.md`](reports/multihop_rag_2025_2026_survey.md): 10-paper (2025–2026, A*/A + COLM, open-source code) × 10-benchmark comparison matrix & trade-offs.
+- [`research_findings.md`](research_findings.md) & [`verification_report.md`](verification_report.md): Research findings summary and upstream audit log.
+- [`reproduction-journey.html`](reproduction-journey.html): Interactive visual reproduction timeline.
 
-- MuSiQue: 300 balanced examples for the short EDA, in addition to the verified full-dev run above.
-- HotpotQA: 300 paired examples. Each pair uses the same question and source QA, with sufficient versus evidence-deficient passages.
-- FiQA-2018: 42 examples, manually judged by one reviewer; this is a small exploratory sample.
-- SciFact: not evaluated. Its SUPPORT/CONTRADICT/NOT ENOUGH INFO labels do not directly represent answerability.
+### Scripts & Configs
+- [`scripts/`](scripts/): Training worker (`kaggle_train_worker.py`), notebook generators (`build_full_decision_benchmark_notebook.py`, `build_five_benchmark_notebook.py`, `build_notebooks.py`, `build_15min_eda_notebook.py`), data prep (`prepare_eval_data.py`), Kaggle monitor (`monitor_kaggle_v5.ps1`).
+- [`configs/experiment_config.json`](configs/experiment_config.json): Machine-readable experiment configuration and verified metrics.
 
-No cross-domain metrics are reported until the notebook is run and outputs are saved. HotpotQA also changes the input task from MuSiQue hop-level sub-questions to full questions, so it tests both dataset and task-format shift.
-
-## Kaggle artifacts
-
-Training notebook: [Fact Grounding Training Reproduction (Live Logs)](https://www.kaggle.com/code/huthnhnguyn/fact-grounding-training-reproduction-live-logs)
-
-Verifier run: [Fact Grounding Checkpoint Reload Verification](https://www.kaggle.com/code/huthnhnguyn/fact-grounding-checkpoint-reload-verification/log)
-
-The verifier wrote these files under its Kaggle run's `/kaggle/working/` directory:
-
-- `checkpoint_reload_report.json`
-- `recomputed_in_domain_metrics.json`
-- `recomputed_in_domain_predictions.csv`
-- `checkpoint_reload_samples.csv`
-
-The selected checkpoint files are packaged in [`checkpoint/`](checkpoint/). The main weights file is `model.safetensors` (about 1.74 GB); Git LFS is required to fetch it. The small config and tokenizer files in the same directory are needed to load the classifier.
-
-To clone and retrieve the checkpoint:
+## Cloning With Checkpoint Weights (Git LFS)
 
 ```bash
 git lfs install
@@ -82,19 +78,3 @@ git clone --branch codex/fact-grounding-reproduction https://github.com/nhthanh1
 cd 3thangngu
 git lfs pull
 ```
-
-The fine-tuning data and optional cross-domain evaluation data remain linked as Kaggle inputs rather than copied into this GitHub repository. The cross-domain data package has mixed or unspecified source-license metadata; its notebook is included, but its data are not redistributed here.
-
-## Research boundary and next step
-
-The current evidence supports an in-domain classifier reproduction with a successful checkpoint reload. It does not show that adding the decision classifier improves end-to-end QA accuracy or retrieval efficiency, and it does not establish cross-domain generalization. Next, run the paired pipeline comparison on the same QA examples and report final QA EM/F1, retrieval calls, and latency; then run the prepared HotpotQA and FiQA evaluations at the fixed threshold.
-
-## Project files
-
-- `verification_report.md`: paper/repository protocol and data audit.
-- `research_findings.md`: research status and limitations.
-- `reproduction-journey.html`: visual timeline and result summary.
-- `configs/experiment_config.json`: machine-readable configuration.
-- `datasets/training_data/`: official train/dev CSVs.
-- `kaggle_eval_data/`: prepared cross-domain evaluation package.
-- `logs/`: profiling and Kaggle monitoring records.
