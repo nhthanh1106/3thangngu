@@ -58,8 +58,10 @@ Executed on Kaggle: [Fact Grounding 8-Benchmark Decision Eval (Version 1)](https
 | [`02_cross_domain_eval.ipynb`](02_cross_domain_eval.ipynb) | Initial small cross-domain evaluation script | Superseded by Notebooks 04 & 05 |
 | [`04_five_benchmark_eval.ipynb`](04_five_benchmark_eval.ipynb) | 5-track evaluation run on earlier v5 checkpoint (`6bbd13d5...`) | Completed (`results/04_five_benchmark_v5/`) |
 | [`05_full_decision_benchmark_eval.ipynb`](05_full_decision_benchmark_eval.ipynb) | **Full 8-benchmark (9-track) evaluation + post-hoc Temperature Scaling on canonical `93ef195f...`** | **Completed (`results/05_eight_benchmark_eval/`)** |
+| [`07_overnight_multihop_rag_systems.ipynb`](07_overnight_multihop_rag_systems.ipynb) | **End-to-end Multi-Hop RAG Suite (800 Qs): Dense-RAG, LinearRAG (ICLR'26), Adaptive FG-Gate, CoRAG-8B (NeurIPS'25), Search-R1 (COLM'25)** | **Sys 1–4 completed (`Search-R1` running)** |
 
 ### Reports & Analysis
+- [`reports/linearrag_iclr2026_analysis_and_tradeoffs.md`](reports/linearrag_iclr2026_analysis_and_tradeoffs.md): **Full LinearRAG (ICLR 2026) context, original paper Tables 1/2/4/5/6, Kaggle NB 07 head-to-head results, implementation audit, multi-dimensional trade-off analysis vs GraphRAG / Iterative / RL SOTA, and `AS-LinearRAG` proposal** (Word version: [`reports/Bao_Cao_LinearRAG_Full_CoHinh_GoogleDocs.docx`](reports/Bao_Cao_LinearRAG_Full_CoHinh_GoogleDocs.docx)).
 - [`reports/eight_benchmark_sota_comparison.md`](reports/eight_benchmark_sota_comparison.md): Detailed 8-benchmark evaluation analysis, v5 vs canonical checkpoint comparison, post-hoc calibration results, and published SOTA comparisons (EMNLP'26, ICLR'25 Sufficient Context, ICLR'25 FaithEval, COLM'24 MultiHop-RAG, ICLR'23 SQuAD2).
 - [`reports/bottlenecks_and_literature_gap.md`](reports/bottlenecks_and_literature_gap.md): Plain-language diagnosis of the 5 bottlenecks and mapping to 2024–2026 papers (*Provence, MiniCheck, Sufficient Context, SURE-RAG, UCCI, Verification Without Sufficiency*).
 - [`reports/multihop_rag_2025_2026_survey.md`](reports/multihop_rag_2025_2026_survey.md): 10-paper (2025–2026, A*/A + COLM, open-source code) × 10-benchmark comparison matrix & trade-offs.
@@ -67,7 +69,7 @@ Executed on Kaggle: [Fact Grounding 8-Benchmark Decision Eval (Version 1)](https
 - [`reproduction-journey.html`](reproduction-journey.html): Interactive visual reproduction timeline.
 
 ### Scripts & Configs
-- [`scripts/`](scripts/): Training worker (`kaggle_train_worker.py`), notebook generators (`build_full_decision_benchmark_notebook.py`, `build_five_benchmark_notebook.py`, `build_notebooks.py`, `build_15min_eda_notebook.py`), data prep (`prepare_eval_data.py`), Kaggle monitor (`monitor_kaggle_v5.ps1`).
+- [`scripts/`](scripts/): Training worker (`kaggle_train_worker.py`), notebook generators (`build_full_decision_benchmark_notebook.py`, `build_five_benchmark_notebook.py`, `build_notebooks.py`, `build_15min_eda_notebook.py`, `build_overnight_suite_07.py`), data prep (`prepare_eval_data.py`), Kaggle monitor (`monitor_kaggle_v5.ps1`).
 - [`configs/experiment_config.json`](configs/experiment_config.json): Machine-readable experiment configuration and verified metrics.
 
 ## Cloning With Checkpoint Weights (Git LFS)

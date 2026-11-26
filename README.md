@@ -15,6 +15,7 @@ Notebook, checkpoint DeBERTa-v3-large (`SHA-256: 93ef195f...` qua Git LFS), kế
   - [Báo cáo 8-Benchmark & So sánh SOTA (2022–2026)](fact_grounding_reproduction/reports/eight_benchmark_sota_comparison.md)
   - [Giải thích 5 nút thắt & bản đồ paper 2024–2026](fact_grounding_reproduction/reports/bottlenecks_and_literature_gap.md)
   - [Tổng hợp ma trận 10 Paper Multi-Hop RAG (2025–2026, A*/A + code)](fact_grounding_reproduction/reports/multihop_rag_2025_2026_survey.md)
+  - **[Báo cáo Chuyên sâu LinearRAG (ICLR 2026), Đối chiếu SOTA & Phân tích Trade-off Đa chiều](fact_grounding_reproduction/reports/linearrag_iclr2026_analysis_and_tradeoffs.md)** *(kèm bản Word nhúng hình [`Bao_Cao_LinearRAG_Full_CoHinh_GoogleDocs.docx`](fact_grounding_reproduction/reports/Bao_Cao_LinearRAG_Full_CoHinh_GoogleDocs.docx) & Notebook đối chiếu [`07_overnight_multihop_rag_systems.ipynb`](fact_grounding_reproduction/07_overnight_multihop_rag_systems.ipynb))*
 
 ### Tóm tắt kết quả nổi bật (Checkpoint canonical `93ef195f...`, 435M, `14–33 ms/mẫu`)
 - **In-domain MuSiQue dev (`6,404` hops):** `F1 = 0.7907` (+0.0057 vs bài gốc `0.785`), `Acc = 0.8142`, `P = 0.8847`, `AUROC = 0.8764`, ECE giảm `0.1176 → 0.0372` sau Temperature Scaling (`T = 1.929`).
